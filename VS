@@ -1,0 +1,157 @@
+#include <iostream>
+#include <ctime>
+#include <cstdlib>
+#include <Windows.h>
+using namespace std;
+
+void draw(char XandO[3][3]);
+void brain(char XandO[3][3]);
+void AI(char XandO[3][3], bool playAgain);
+void reset(char XandO[3][3]);
+bool winOrLost(char XandO[3][3]);
+
+int main()
+{
+	char XandO[3][3];
+	reset(XandO);
+	cout << "INSTRUCTION:\n";
+	cout << "  - You will be X and the AI will be O\n";
+	cout << "  - Choose a coordinate of x and y to fill in the square you want or enter 00 to end the game\n";
+	cout << "  - You need 4 X's in a line to win\n";
+	cout << endl;
+	draw(XandO);
+	brain(XandO);
+	cout << "\nGAME OVER\n";
+}
+
+void reset(char XandO[3][3]) {
+	for (int y = 0; y < 3; y++) {
+		for (int x = 0; x < 3; x++) {
+			XandO[y][x] = ' ';
+		}
+	}
+}
+
+void draw(char XandO[3][3]) {
+	cout << "  ";
+	for (int a = 0; a < 3; a++) {
+		cout << "  " << a + 1 << " ";
+	}
+	cout << "  x";
+	cout << endl;
+	for (int b = 0; b < 3; b++) {
+		cout << "  ";
+		for (int c = 0; c < 3; c++) {
+			cout << "+---";
+		}
+		cout << "+\n";
+		cout << b + 1 << " ";
+		for (int d = 0; d < 3; d++) {
+			cout << "| "<< XandO[b][d] <<" ";
+		}
+		cout << "|\n";
+	}
+	cout << "  ";
+	for (int e = 0; e < 3; e++) {
+		cout << "+---";
+	}
+	cout << "+\n";
+	cout << "y\n";
+	cout << endl;
+}
+
+void brain(char XandO[3][3]) {
+	bool playAgain = true;
+	int xy;
+	cout << "Please enter a coordinate in form of xy to play or 00 to end the game: ";
+	cin >> xy;
+	int y = xy / 10;
+	int x = xy % 10;
+	while (xy!=0) {
+		if (x > 3 || y > 3 || xy % 10 == 0 || xy <= 10) {
+			cout << "Please enter a valid coordinate in form of xy to play or 00 to end the game: ";
+			cin >> xy;
+			y = xy / 10;
+			x = xy - y * 10;
+		}else{
+			if (XandO[x - 1][y - 1] != ' ') {
+				cout << "Please enter another coordinate in form of xy to play or 00 to end the game: ";
+				cin >> xy;
+				y = xy / 10;
+				x = xy - y * 10;
+			}
+			else {
+				XandO[x - 1][y - 1] = 'x';
+				draw(XandO);
+
+				playAgain = winOrLost(XandO);
+
+				AI(XandO, playAgain);
+
+				playAgain = winOrLost(XandO);
+
+				cout << "Please enter another coordinate in form of xy to play or 00 to end the game: ";
+				cin >> xy;
+				y = xy / 10;
+				x = xy - y * 10;
+				playAgain = true;
+			}
+		}
+	}
+}
+
+void AI(char XandO[3][3], bool playAgain) {
+	if (playAgain == true) {
+		cout << "PLEASE WAIT FOR AI TO THINK .";
+		Sleep(1000);
+		cout << " .";
+		Sleep(1000);
+		cout << " .";
+		Sleep(1000);
+		cout << endl;
+		unsigned seed = time(0);
+		srand(seed);
+		int xRand = rand() % 3;
+		int yRand = rand() % 3;
+		while (XandO[xRand][yRand] != ' ') {
+			xRand = rand() % 3;
+			yRand = rand() % 3;
+		}
+		if (XandO[xRand][yRand] == ' ') {
+			XandO[xRand][yRand] = 'o';
+		}
+		draw(XandO);
+	}
+}
+
+
+bool winOrLost(char XandO[3][3]) {
+	bool againOrNot = true;
+	if ((XandO[0][0] == 'x' && XandO[1][1] == 'x' && XandO[2][2] == 'x') ||
+		(XandO[2][0] == 'x' && XandO[1][1] == 'x' && XandO[0][2] == 'x') ||
+		(XandO[0][0] == 'x' && XandO[1][0] == 'x' && XandO[2][0] == 'x') ||
+		(XandO[0][1] == 'x' && XandO[1][1] == 'x' && XandO[2][1] == 'x') ||
+		(XandO[0][2] == 'x' && XandO[1][2] == 'x' && XandO[2][2] == 'x') ||
+		(XandO[0][0] == 'x' && XandO[0][1] == 'x' && XandO[0][2] == 'x') ||
+		(XandO[1][0] == 'x' && XandO[1][1] == 'x' && XandO[1][2] == 'x') ||
+		(XandO[2][0] == 'x' && XandO[2][1] == 'x' && XandO[2][2] == 'x')) {
+		cout << "\nYOU WON THE GAME\n";
+		cout << endl;
+		reset(XandO);
+		againOrNot = false;
+	}
+	else if ((XandO[0][0] == 'o' && XandO[1][1] == 'o' && XandO[2][2] == 'o') ||
+		(XandO[2][0] == 'o' && XandO[1][1] == 'o' && XandO[0][2] == 'o') ||
+		(XandO[0][0] == 'o' && XandO[1][0] == 'o' && XandO[2][0] == 'o') ||
+		(XandO[0][1] == 'o' && XandO[1][1] == 'o' && XandO[2][1] == 'o') ||
+		(XandO[0][2] == 'o' && XandO[1][2] == 'o' && XandO[2][2] == 'o') ||
+		(XandO[0][0] == 'o' && XandO[0][1] == 'o' && XandO[0][2] == 'o') ||
+		(XandO[1][0] == 'o' && XandO[1][1] == 'o' && XandO[1][2] == 'o') ||
+		(XandO[2][0] == 'o' && XandO[2][1] == 'o' && XandO[2][2] == 'o')) {
+		cout << "\nYOU LOST THE GAME\n";
+		cout << endl;
+		reset(XandO);
+		againOrNot = false;
+	}
+	return againOrNot;
+}
