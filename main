@@ -10,6 +10,8 @@ void AI(char XandO[3][3], bool playAgain);
 void reset(char XandO[3][3]);
 bool winOrLost(char XandO[3][3]);
 
+
+
 int main()
 {
 	char XandO[3][3];
@@ -17,7 +19,7 @@ int main()
 	cout << "INSTRUCTION:\n";
 	cout << "  - You will be X and the AI will be O\n";
 	cout << "  - Choose a coordinate of x and y to fill in the square you want or enter 00 to end the game\n";
-	cout << "  - You need 4 X's in a line to win\n";
+	cout << "  - You need 3 X's in a line to win\n";
 	cout << endl;
 	draw(XandO);
 	brain(XandO);
@@ -34,8 +36,7 @@ void draw(char XandO[3][3]) {
 	cout << "  ";
 	for (int a = 0; a < 3; a++)
 		cout << "  " << a + 1 << " ";
-	cout << "  x";
-	cout << endl;
+	cout << "  x" << endl;
 	for (int b = 0; b < 3; b++) {
 		cout << "  ";
 		for (int c = 0; c < 3; c++)
@@ -43,7 +44,7 @@ void draw(char XandO[3][3]) {
 		cout << "+\n";
 		cout << b + 1 << " ";
 		for (int d = 0; d < 3; d++)
-			cout << "| "<< XandO[b][d] <<" ";
+			cout << "| "<< XandO[d][b] <<" ";
 		cout << "|\n";
 	}
 	cout << "  ";
@@ -59,20 +60,20 @@ void brain(char XandO[3][3]) {
 	int xy;
 	cout << "Please enter a coordinate in form of xy to play or 00 to end the game: ";
 	cin >> xy;
-	int y = xy / 10;
-	int x = xy % 10;
+	int x = xy / 10;
+	int y = xy % 10;
 	while (xy!=0) {
 		if (x > 3 || y > 3 || xy % 10 == 0 || xy <= 10) {
 			cout << "Please enter a valid coordinate in form of xy to play or 00 to end the game: ";
 			cin >> xy;
-			y = xy / 10;
-			x = xy - y * 10;
+			x = xy / 10;
+			y = xy % 10;
 		}else{
 			if (XandO[x - 1][y - 1] != ' ') {
 				cout << "Please enter another coordinate in form of xy to play or 00 to end the game: ";
 				cin >> xy;
-				y = xy / 10;
-				x = xy - y * 10;
+				x = xy / 10;
+				y = xy % 10;
 			}
 			else {
 				XandO[x - 1][y - 1] = 'x';
@@ -86,63 +87,108 @@ void brain(char XandO[3][3]) {
 
 				cout << "Please enter another coordinate in form of xy to play or 00 to end the game: ";
 				cin >> xy;
-				y = xy / 10;
-				x = xy - y * 10;
+				x = xy / 10;
+				y = xy % 10;
 				playAgain = true;
 			}
 		}
 	}
 }
 
-int bestOption(char XandO[3][3]) {
-	unsigned seed = time(0);
-	srand(seed);
-	int xRand = rand() % 3;
-	int yRand = rand() % 3;
-	while (XandO[xRand][yRand] != ' ') {
-		xRand = rand() % 3;
-		yRand = rand() % 3;
+////==============================================================================================================================////
+
+bool endYet(char player, char XandO[3][3]) {
+	if ((XandO[0][0] == player && XandO[1][1] == player && XandO[2][2] == player) ||
+		(XandO[2][0] == player && XandO[1][1] == player && XandO[0][2] == player) ||
+		(XandO[0][0] == player && XandO[1][0] == player && XandO[2][0] == player) ||
+		(XandO[0][1] == player && XandO[1][1] == player && XandO[2][1] == player) ||
+		(XandO[0][2] == player && XandO[1][2] == player && XandO[2][2] == player) ||
+		(XandO[0][0] == player && XandO[0][1] == player && XandO[0][2] == player) ||
+		(XandO[1][0] == player && XandO[1][1] == player && XandO[1][2] == player) ||
+		(XandO[2][0] == player && XandO[2][1] == player && XandO[2][2] == player))
+		return true;
+	return false;
+}
+bool tieYet(char XandO[3][3]) {
+	int countBlank = 0;
+	for (int i = 0; i < 3; i++)
+		for (int j = 0; j < 3; j++)
+			if (XandO[i][j] == ' ')
+				countBlank++;
+	if (countBlank == 0)
+		return true;
+	return false;
+}
+
+int attack(int nextMove, char nextPlayer, char current[3][3]) {
+	int lReturn = 0;
+	current[nextMove / 10][nextMove % 10] = nextPlayer;
+	char nextNextPlayer = 'x';
+	if (nextPlayer == 'x')nextNextPlayer = 'o';
+	for (int i = 0;i < 3;i++) {
+		for (int j = 0; j < 3; j++) {
+			if (current[i][j] == ' ' && (!endYet('x', current)) && (!endYet('o', current))) {
+				char afterCurrent[3][3];
+				for (int a = 0; a < 3; a++)
+					for (int b = 0; b < 3; b++)
+						afterCurrent[a][b] = current[a][b];
+				lReturn += attack(i * 10 + j, nextNextPlayer, afterCurrent);
+			}
+			if(endYet('o', current)||tieYet(current))
+				lReturn = 1;
+		}
 	}
-	return xRand * 10 + yRand;
+	return lReturn;
+}
+
+int bestOption(char XandO[3][3]) {
+	int lReturn = 0;
+	int lHighest = 0;
+	for (int i = 0; i < 3; i++)
+		for (int j = 0; j < 3; j++) {
+			if (XandO[i][j] == ' ') {
+				char current[3][3];
+				for (int a = 0; a < 3; a++)
+					for (int b = 0; b < 3; b++)
+						current[a][b] = XandO[a][b];
+				int count = attack(i * 10 + j, 'o', current);
+				cout << "(x,y)=(" << i + 1 << "," << j + 1 << ") with " << count << " chances to win or tie\n";
+				if (count > lHighest) {
+					lHighest = count;
+					lReturn = i * 10 + j;
+				}
+			}
+		}
+	cout << "pick (x,y)=(" << lReturn / 10 + 1 << "," << lReturn % 10 + 1 << ")" << endl;
+	return lReturn;
 }
 
 void AI(char XandO[3][3], bool playAgain) {
 	if (playAgain == true) {
 		cout << "PLEASE WAIT FOR AI TO THINK .";
-		Sleep(1000);
+		Sleep(500);
 		cout << " .";
-		Sleep(1000);
+		Sleep(500);
 		cout << " .";
-		Sleep(1000);
+		Sleep(500);
 		cout << endl;
-		XandO[bestOption(XandO) / 10][bestOption(XandO) % 10] = 'o';
+		int bestChoice = bestOption(XandO);
+		XandO[bestChoice / 10][bestChoice % 10] = 'o';
 		draw(XandO);
 	}
 }
 
+////==============================================================================================================================////
+
 bool winOrLost(char XandO[3][3]) {
 	bool againOrNot = true;
-	if ((XandO[0][0] == 'x' && XandO[1][1] == 'x' && XandO[2][2] == 'x') ||
-		(XandO[2][0] == 'x' && XandO[1][1] == 'x' && XandO[0][2] == 'x') ||
-		(XandO[0][0] == 'x' && XandO[1][0] == 'x' && XandO[2][0] == 'x') ||
-		(XandO[0][1] == 'x' && XandO[1][1] == 'x' && XandO[2][1] == 'x') ||
-		(XandO[0][2] == 'x' && XandO[1][2] == 'x' && XandO[2][2] == 'x') ||
-		(XandO[0][0] == 'x' && XandO[0][1] == 'x' && XandO[0][2] == 'x') ||
-		(XandO[1][0] == 'x' && XandO[1][1] == 'x' && XandO[1][2] == 'x') ||
-		(XandO[2][0] == 'x' && XandO[2][1] == 'x' && XandO[2][2] == 'x')) {
+	if (endYet('x', XandO)) {
 		cout << "\nYOU WON THE GAME\n";
 		cout << endl;
 		reset(XandO);
 		againOrNot = false;
 	}
-	else if ((XandO[0][0] == 'o' && XandO[1][1] == 'o' && XandO[2][2] == 'o') ||
-		(XandO[2][0] == 'o' && XandO[1][1] == 'o' && XandO[0][2] == 'o') ||
-		(XandO[0][0] == 'o' && XandO[1][0] == 'o' && XandO[2][0] == 'o') ||
-		(XandO[0][1] == 'o' && XandO[1][1] == 'o' && XandO[2][1] == 'o') ||
-		(XandO[0][2] == 'o' && XandO[1][2] == 'o' && XandO[2][2] == 'o') ||
-		(XandO[0][0] == 'o' && XandO[0][1] == 'o' && XandO[0][2] == 'o') ||
-		(XandO[1][0] == 'o' && XandO[1][1] == 'o' && XandO[1][2] == 'o') ||
-		(XandO[2][0] == 'o' && XandO[2][1] == 'o' && XandO[2][2] == 'o')) {
+	else if (endYet('o', XandO)){
 		cout << "\nYOU LOST THE GAME\n";
 		cout << endl;
 		reset(XandO);
