@@ -4,17 +4,17 @@
 #include <Windows.h>
 using namespace std;
 
-void draw(char XandO[3][3]);
-void brain(char XandO[3][3]);
-void AI(char XandO[3][3], bool playAgain);
-void reset(char XandO[3][3]);
-bool winOrLost(char XandO[3][3]);
+const int scale = 3;
 
-
+void draw(char XandO[scale][scale]);
+void brain(char XandO[scale][scale]);
+void AI(char XandO[scale][scale], bool playAgain);
+void reset(char XandO[scale][scale]);
+bool winOrLost(char XandO[scale][scale]);
 
 int main()
 {
-	char XandO[3][3];
+	char XandO[scale][scale];
 	reset(XandO);
 	cout << "INSTRUCTION:\n";
 	cout << "  - You will be X and the AI will be O\n";
@@ -26,36 +26,36 @@ int main()
 	cout << "\nGAME OVER\n";
 }
 
-void reset(char XandO[3][3]) {
-	for (int y = 0; y < 3; y++)
-		for (int x = 0; x < 3; x++)
+void reset(char XandO[scale][scale]) {
+	for (int y = 0; y < scale; y++)
+		for (int x = 0; x < scale; x++)
 			XandO[y][x] = ' ';
 }
 
-void draw(char XandO[3][3]) {
+void draw(char XandO[scale][scale]) {
 	cout << "  ";
-	for (int a = 0; a < 3; a++)
+	for (int a = 0; a < scale; a++)
 		cout << "  " << a + 1 << " ";
 	cout << "  x" << endl;
-	for (int b = 0; b < 3; b++) {
+	for (int b = 0; b < scale; b++) {
 		cout << "  ";
-		for (int c = 0; c < 3; c++)
+		for (int c = 0; c < scale; c++)
 			cout << "+---";
 		cout << "+\n";
 		cout << b + 1 << " ";
-		for (int d = 0; d < 3; d++)
+		for (int d = 0; d < scale; d++)
 			cout << "| "<< XandO[d][b] <<" ";
 		cout << "|\n";
 	}
 	cout << "  ";
-	for (int e = 0; e < 3; e++)
+	for (int e = 0; e < scale; e++)
 		cout << "+---";
 	cout << "+\n";
 	cout << "y\n";
 	cout << endl;
 }
 
-void brain(char XandO[3][3]) {
+void brain(char XandO[scale][scale]) {
 	bool playAgain = true;
 	int xy;
 	cout << "Please enter a coordinate in form of xy to play or 00 to end the game: ";
@@ -63,7 +63,7 @@ void brain(char XandO[3][3]) {
 	int x = xy / 10;
 	int y = xy % 10;
 	while (xy!=0) {
-		if (x > 3 || y > 3 || xy % 10 == 0 || xy <= 10) {
+		if (x > scale || y > scale || xy % 10 == 0 || xy <= 10) {
 			cout << "Please enter a valid coordinate in form of xy to play or 00 to end the game: ";
 			cin >> xy;
 			x = xy / 10;
@@ -97,22 +97,35 @@ void brain(char XandO[3][3]) {
 
 ////==============================================================================================================================////
 
-bool endYet(char player, char XandO[3][3]) {
-	if ((XandO[0][0] == player && XandO[1][1] == player && XandO[2][2] == player) ||
-		(XandO[2][0] == player && XandO[1][1] == player && XandO[0][2] == player) ||
-		(XandO[0][0] == player && XandO[1][0] == player && XandO[2][0] == player) ||
-		(XandO[0][1] == player && XandO[1][1] == player && XandO[2][1] == player) ||
-		(XandO[0][2] == player && XandO[1][2] == player && XandO[2][2] == player) ||
-		(XandO[0][0] == player && XandO[0][1] == player && XandO[0][2] == player) ||
-		(XandO[1][0] == player && XandO[1][1] == player && XandO[1][2] == player) ||
-		(XandO[2][0] == player && XandO[2][1] == player && XandO[2][2] == player))
+bool endYet(char player, char XandO[scale][scale]) {
+	int countRightSlash = 0;
+	int countLeftSlash = 0;
+	for (int i = 0; i < scale; i++) {
+		int countRow = 0;
+		int countLine = 0;
+		if (XandO[i][i] == player)
+			countRightSlash++;
+		if (XandO[i][scale-1-i] == player)
+			countLeftSlash++;
+		for (int j = 0; j < scale; j++) {
+			if (XandO[i][j] == player)
+				countRow++;
+			if (XandO[j][i] == player)
+				countLine++;
+		}
+		if (countRow == scale || countLine == scale) {
+			return true;
+		}
+	}
+	if (countRightSlash == scale || countLeftSlash == scale)
 		return true;
 	return false;
 }
-bool tieYet(char XandO[3][3]) {
+
+bool tieYet(char XandO[scale][scale]) {
 	int countBlank = 0;
-	for (int i = 0; i < 3; i++)
-		for (int j = 0; j < 3; j++)
+	for (int i = 0; i < scale; i++)
+		for (int j = 0; j < scale; j++)
 			if (XandO[i][j] == ' ')
 				countBlank++;
 	if (countBlank == 0)
@@ -120,17 +133,17 @@ bool tieYet(char XandO[3][3]) {
 	return false;
 }
 
-int attack(int nextMove, char nextPlayer, char current[3][3]) {
+int attack(int nextMove, char nextPlayer, char current[scale][scale]) {
 	int lReturn = 0;
 	current[nextMove / 10][nextMove % 10] = nextPlayer;
 	char nextNextPlayer = 'x';
 	if (nextPlayer == 'x')nextNextPlayer = 'o';
-	for (int i = 0;i < 3;i++) {
-		for (int j = 0; j < 3; j++) {
+	for (int i = 0;i < scale;i++) {
+		for (int j = 0; j < scale; j++) {
 			if (current[i][j] == ' ' && (!endYet('x', current)) && (!endYet('o', current))) {
-				char afterCurrent[3][3];
-				for (int a = 0; a < 3; a++)
-					for (int b = 0; b < 3; b++)
+				char afterCurrent[scale][scale];
+				for (int a = 0; a < scale; a++)
+					for (int b = 0; b < scale; b++)
 						afterCurrent[a][b] = current[a][b];
 				lReturn += attack(i * 10 + j, nextNextPlayer, afterCurrent);
 			}
@@ -141,15 +154,15 @@ int attack(int nextMove, char nextPlayer, char current[3][3]) {
 	return lReturn;
 }
 
-int bestOption(char XandO[3][3]) {
+int bestOption(char XandO[scale][scale]) {
 	int lReturn = 0;
 	int lHighest = 0;
-	for (int i = 0; i < 3; i++)
-		for (int j = 0; j < 3; j++) {
+	for (int i = 0; i < scale; i++)
+		for (int j = 0; j < scale; j++) {
 			if (XandO[i][j] == ' ') {
-				char current[3][3];
-				for (int a = 0; a < 3; a++)
-					for (int b = 0; b < 3; b++)
+				char current[scale][scale];
+				for (int a = 0; a < scale; a++)
+					for (int b = 0; b < scale; b++)
 						current[a][b] = XandO[a][b];
 				int count = attack(i * 10 + j, 'o', current);
 				cout << "(x,y)=(" << i + 1 << "," << j + 1 << ") with " << count << " chances to win or tie\n";
@@ -163,7 +176,7 @@ int bestOption(char XandO[3][3]) {
 	return lReturn;
 }
 
-void AI(char XandO[3][3], bool playAgain) {
+void AI(char XandO[scale][scale], bool playAgain) {
 	if (playAgain == true) {
 		cout << "PLEASE WAIT FOR AI TO THINK .";
 		Sleep(500);
@@ -180,7 +193,7 @@ void AI(char XandO[3][3], bool playAgain) {
 
 ////==============================================================================================================================////
 
-bool winOrLost(char XandO[3][3]) {
+bool winOrLost(char XandO[scale][scale]) {
 	bool againOrNot = true;
 	if (endYet('x', XandO)) {
 		cout << "\nYOU WON THE GAME\n";
@@ -196,8 +209,8 @@ bool winOrLost(char XandO[3][3]) {
 	}
 	else {
 		int countBlank = 0;
-		for (int i = 0; i < 3; i++)
-			for (int j = 0; j < 3; j++)
+		for (int i = 0; i < scale; i++)
+			for (int j = 0; j < scale; j++)
 				if (XandO[i][j] == ' ')
 					countBlank++;
 		if (countBlank == 0) {
