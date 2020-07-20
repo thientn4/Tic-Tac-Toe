@@ -1,16 +1,16 @@
 #include <iostream>
-#include <ctime>
-#include <cstdlib>
 #include <Windows.h>
+#include <list>
 using namespace std;
 
 const int scale = 3;
-
 void draw(char XandO[scale][scale]);
 void brain(char XandO[scale][scale]);
 void AI(char XandO[scale][scale], bool playAgain);
 void reset(char XandO[scale][scale]);
 bool winOrLost(char XandO[scale][scale]);
+
+////==============================================================================================================================////
 
 int main()
 {
@@ -25,6 +25,8 @@ int main()
 	brain(XandO);
 	cout << "\nGAME OVER\n";
 }
+
+////==============================================================================================================================////
 
 void reset(char XandO[scale][scale]) {
 	for (int y = 0; y < scale; y++)
@@ -78,13 +80,9 @@ void brain(char XandO[scale][scale]) {
 			else {
 				XandO[x - 1][y - 1] = 'x';
 				draw(XandO);
-
 				playAgain = winOrLost(XandO);
-
 				AI(XandO, playAgain);
-
 				playAgain = winOrLost(XandO);
-
 				cout << "Please enter another coordinate in form of xy to play or 00 to end the game: ";
 				cin >> xy;
 				x = xy / 10;
@@ -149,14 +147,15 @@ int attack(int nextMove, char nextPlayer, char current[scale][scale]) {
 			}
 			if(endYet('o', current)||tieYet(current))
 				lReturn = 1;
+			if (endYet('x', current))
+				lReturn = -1;
 		}
 	}
 	return lReturn;
 }
 
 int bestOption(char XandO[scale][scale]) {
-	int lReturn = 0;
-	int lHighest = 0;
+	list <pair<int, int>>optionList;
 	for (int i = 0; i < scale; i++)
 		for (int j = 0; j < scale; j++) {
 			if (XandO[i][j] == ' ') {
@@ -164,14 +163,20 @@ int bestOption(char XandO[scale][scale]) {
 				for (int a = 0; a < scale; a++)
 					for (int b = 0; b < scale; b++)
 						current[a][b] = XandO[a][b];
-				int count = attack(i * 10 + j, 'o', current);
+				int order = i * 10 + j;
+				int count = attack(order, 'o', current);
+				optionList.push_back(make_pair(order, count));
 				cout << "(x,y)=(" << i + 1 << "," << j + 1 << ") with " << count << " chances to win or tie\n";
-				if (count > lHighest) {
-					lHighest = count;
-					lReturn = i * 10 + j;
-				}
 			}
 		}
+	int lHighest=optionList.front().second;
+	int lReturn = optionList.front().first;
+	for (auto i : optionList) {
+		if (i.second > lHighest) {
+			lHighest = i.second;
+			lReturn = i.first;
+		}
+	}
 	cout << "pick (x,y)=(" << lReturn / 10 + 1 << "," << lReturn % 10 + 1 << ")" << endl;
 	return lReturn;
 }
@@ -194,31 +199,23 @@ void AI(char XandO[scale][scale], bool playAgain) {
 ////==============================================================================================================================////
 
 bool winOrLost(char XandO[scale][scale]) {
-	bool againOrNot = true;
 	if (endYet('x', XandO)) {
 		cout << "\nYOU WON THE GAME\n";
 		cout << endl;
 		reset(XandO);
-		againOrNot = false;
+		return false;
 	}
 	else if (endYet('o', XandO)){
 		cout << "\nYOU LOST THE GAME\n";
 		cout << endl;
 		reset(XandO);
-		againOrNot = false;
+		return false;
 	}
-	else {
-		int countBlank = 0;
-		for (int i = 0; i < scale; i++)
-			for (int j = 0; j < scale; j++)
-				if (XandO[i][j] == ' ')
-					countBlank++;
-		if (countBlank == 0) {
-			cout << "\nTHAT WAS A TIE\n";
-			cout << endl;
-			reset(XandO);
-			againOrNot = false;
-		}
+	else if(tieYet(XandO)) {
+		cout << "\nTHAT WAS A TIE\n";
+		cout << endl;
+		reset(XandO);
+		return false;
 	}
-	return againOrNot;
+	return true;
 }
