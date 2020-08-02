@@ -1,6 +1,7 @@
 #include <iostream>
 #include <Windows.h>
 #include <list>
+#include "Option.h"
 using namespace std;
 
 const int scale = 3;
@@ -131,54 +132,96 @@ bool tieYet(char XandO[scale][scale]) {
 	return false;
 }
 
-int attack(int nextMove, char nextPlayer, char current[scale][scale]) {
-	int lReturn = 0;
+pair<int, int> attack(int nextMove, char nextPlayer, char current[scale][scale]) {
+	int lWin = 0;
+	int lLoss = 0;
 	current[nextMove / 10][nextMove % 10] = nextPlayer;
+
 	char nextNextPlayer = 'x';
 	if (nextPlayer == 'x')nextNextPlayer = 'o';
+
 	for (int i = 0;i < scale;i++) {
 		for (int j = 0; j < scale; j++) {
-			if (current[i][j] == ' ' && (!endYet('x', current)) && (!endYet('o', current))) {
+			if (current[i][j] == ' ') {
+				char predict[scale][scale];
+				for (int a = 0; a < scale; a++)
+					for (int b = 0; b < scale; b++) {
+						predict[a][b] = current[a][b];
+					}
+				predict[i][j] = nextNextPlayer;
+				if (endYet(nextNextPlayer, predict)) {
+					if(nextNextPlayer=='x')
+						return make_pair(0, 1);
+					return make_pair(1, 0);
+				}
+			}
+		}
+	}
+
+	for (int i = 0;i < scale;i++) {
+		for (int j = 0; j < scale; j++) {
+			if (current[i][j] == ' ') {
 				char afterCurrent[scale][scale];
 				for (int a = 0; a < scale; a++)
 					for (int b = 0; b < scale; b++)
 						afterCurrent[a][b] = current[a][b];
-				lReturn += attack(i * 10 + j, nextNextPlayer, afterCurrent);
+				pair<int, int> nextPair = attack(i * 10 + j, nextNextPlayer, afterCurrent);
+				lWin += nextPair.first;
+				lLoss += nextPair.second;
 			}
-			if(endYet('o', current)||tieYet(current))
-				lReturn = 1;
-			if (endYet('x', current))
-				lReturn = -1;
 		}
 	}
-	return lReturn;
+	return make_pair(lWin, lLoss);
 }
 
 int bestOption(char XandO[scale][scale]) {
-	list <pair<int, int>>optionList;
+	list <Option>optionList;
+	int instantWin = -1;
+	int instantLoss = -1;
 	for (int i = 0; i < scale; i++)
 		for (int j = 0; j < scale; j++) {
 			if (XandO[i][j] == ' ') {
 				char current[scale][scale];
+				char predictWin[scale][scale];
+				char predictLoss[scale][scale];
 				for (int a = 0; a < scale; a++)
-					for (int b = 0; b < scale; b++)
+					for (int b = 0; b < scale; b++) {
 						current[a][b] = XandO[a][b];
-				int order = i * 10 + j;
-				int count = attack(order, 'o', current);
-				optionList.push_back(make_pair(order, count));
-				cout << "(x,y)=(" << i + 1 << "," << j + 1 << ") with " << count << " chances to win or tie\n";
+						predictWin[a][b] = XandO[a][b];
+						predictLoss[a][b] = XandO[a][b];
+					}
+				predictWin[i][j] = 'o';
+				predictLoss[i][j] = 'x';
+				if (endYet('o', predictWin)) {
+					cout << "(x,y)=(" << i + 1 << "," << j + 1 << ") with instant win\n";
+					instantWin = i * 10 + j;
+				}
+				if (endYet('x', predictLoss)) {
+					cout << "(x,y)=(" << i + 1 << "," << j + 1 << ") with hot spot\n";
+					instantLoss = i * 10 + j;
+				}
+				if (!endYet('o', predictWin) && !endYet('x', predictLoss)) {
+					Option lOption;
+					lOption.mOrder = i * 10 + j;
+					pair<int, int> thisPair = attack(lOption.mOrder, 'o', current);
+					lOption.mCountWin = thisPair.first;
+					lOption.mCountLoss = thisPair.second;
+					optionList.push_back(lOption);
+					cout << "(x,y)=(" << i + 1 << "," << j + 1 << ") with " << (int)lOption.percentWin() << "% chance to win or tie\n";
+				}
 			}
 		}
-	int lHighest=optionList.front().second;
-	int lReturn = optionList.front().first;
+	if (instantWin != -1)
+		return instantWin;
+	if (instantLoss != -1)
+		return instantLoss;
+	Option lHighest = optionList.front();
 	for (auto i : optionList) {
-		if (i.second > lHighest) {
-			lHighest = i.second;
-			lReturn = i.first;
+		if (i > lHighest) {
+			lHighest = i;
 		}
 	}
-	cout << "pick (x,y)=(" << lReturn / 10 + 1 << "," << lReturn % 10 + 1 << ")" << endl;
-	return lReturn;
+	return lHighest.mOrder;
 }
 
 void AI(char XandO[scale][scale], bool playAgain) {
