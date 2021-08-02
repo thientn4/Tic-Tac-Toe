@@ -102,7 +102,7 @@ let game_board=[[null,null,null],[null,null,null],[null,null,null]];
         percentWin(){
             if (this.mCountWin + this.mCountLoss == 0)
                 return 0;
-            return this.mCountWin / (this.mCountWin + this.mCountLoss)*100;
+            return (this.mCountWin / (this.mCountWin + this.mCountLoss))*100;
         }
     }
 
@@ -111,40 +111,30 @@ let game_board=[[null,null,null],[null,null,null],[null,null,null]];
         let lLoss=0;
         current[Math.floor(nextMove/10)][nextMove%10]=nextPlayer;
 
-        let nextNextPlayer='x';
-        if(nextPlayer=='x')nextNextPlayer='o';
+        let nextNextPlayer=(nextPlayer=='x')?'o':'x';
 
-        for(let i=0;i<3;i++){
-            for(let j=0;j<3;j++){
-                if(current[i][j]==null){
-                    let predict=[[null,null,null],[null,null,null],[null,null,null]];
-                    for(let a=0;a<3;a++){
-                        for(let b=0;b<3;b++){
-                            predict[a][b]=current[a][b];
-                        }
-                    }
-                    predict[i][j]=nextNextPlayer;
-                    if (endYet(nextNextPlayer, predict)) {
-                        if(nextNextPlayer=='x')
-                            return [0,1];
-                        return [1,0];
-                    }
-                }
-            }
-        }
+        let afterCurrent=[[null,null,null],[null,null,null],[null,null,null]];
+        for (let a = 0; a < 3; a++)
+            for (let b = 0; b < 3; b++)
+                afterCurrent[a][b] = current[a][b];
+        
         for (let i = 0;i < 3;i++) {
             for (let j = 0; j < 3; j++) {
                 if (current[i][j] == null) {
-                    let afterCurrent=[[null,null,null],[null,null,null],[null,null,null]];
-                    for (let a = 0; a < 3; a++)
-                        for (let b = 0; b < 3; b++)
-                            afterCurrent[a][b] = current[a][b];
+                    afterCurrent[i][j]=nextNextPlayer;
+                    if (endYet(nextNextPlayer, afterCurrent)){
+                        current[Math.floor(nextMove/10)][nextMove%10]=null;
+                        return [nextNextPlayer!='x',nextNextPlayer=='x'];
+                    }
+                    afterCurrent[i][j]=null;
+
                     let nextPair = attack(i * 10 + j, nextNextPlayer, afterCurrent);
                     lWin += nextPair[0];
                     lLoss += nextPair[1];
                 }
             }
         }
+        current[Math.floor(nextMove/10)][nextMove%10]=null;
         return [lWin, lLoss];
     }
 
@@ -152,18 +142,16 @@ let game_board=[[null,null,null],[null,null,null],[null,null,null]];
         optionList=[];
         let instantWin = -1;
         let instantLoss = -1;
+        let predictWin=[[null,null,null],[null,null,null],[null,null,null]];
+        let predictLoss=[[null,null,null],[null,null,null],[null,null,null]];
+        for (let a = 0; a < 3; a++)
+            for (let b = 0; b < 3; b++) {
+                predictWin[a][b] = XandO[a][b];
+                predictLoss[a][b] = XandO[a][b];
+            }
         for (let i = 0; i < 3; i++)
             for (let j = 0; j < 3; j++) {
                 if (XandO[i][j] == null) {
-                    let current=[[null,null,null],[null,null,null],[null,null,null]];
-                    let predictWin=[[null,null,null],[null,null,null],[null,null,null]];
-                    let predictLoss=[[null,null,null],[null,null,null],[null,null,null]];
-                    for (let a = 0; a < 3; a++)
-                        for (let b = 0; b < 3; b++) {
-                            current[a][b] = XandO[a][b];
-                            predictWin[a][b] = XandO[a][b];
-                            predictLoss[a][b] = XandO[a][b];
-                        }
                     predictWin[i][j] = 'o';
                     predictLoss[i][j] = 'x';
                     if (endYet('o', predictWin)) {
@@ -175,11 +163,13 @@ let game_board=[[null,null,null],[null,null,null],[null,null,null]];
                     if (endYet('o', predictWin)==false && endYet('x', predictLoss)==false) {
                         let lOption=new Option();
                         lOption.mOrder = i * 10 + j;
-                        let thisPair = attack(lOption.mOrder, 'o', current);
+                        let thisPair = attack(lOption.mOrder, 'o', XandO);
                         lOption.mCountWin = thisPair[0];
                         lOption.mCountLoss = thisPair[1];
                         optionList.push(lOption);
                     }
+                    predictWin[i][j] = null;
+                    predictLoss[i][j] = null;
                 }
             }
         if (instantWin != -1)
@@ -193,17 +183,6 @@ let game_board=[[null,null,null],[null,null,null],[null,null,null]];
             }
         }
         return lHighest.mOrder;
-    }
-
-
-
-    function BestOption(XandO){
-        while(true){
-            let x=Math.floor(Math.random()*3);
-            let y=Math.floor(Math.random()*3);
-            if(XandO[x][y]==null)
-                return x*10+y;
-        }
     }
 
 
