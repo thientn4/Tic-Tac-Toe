@@ -1,5 +1,4 @@
 #include <iostream>
-#include <Windows.h>
 #include <list>
 using namespace std;
 
@@ -241,13 +240,6 @@ int bestOption(char XandO[scale][scale]) {
 
 void AI(char XandO[scale][scale], bool playAgain) {
 	if (playAgain == true) {
-		cout << "PLEASE WAIT FOR AI TO THINK .";
-		Sleep(500);
-		cout << " .";
-		Sleep(500);
-		cout << " .";
-		Sleep(500);
-		cout << endl;
 		int bestChoice = bestOption(XandO);
 		XandO[bestChoice / 10][bestChoice % 10] = 'o';
 		draw(XandO);
