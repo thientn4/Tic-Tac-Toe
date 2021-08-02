@@ -5,10 +5,10 @@ body{
     justify-content: center;
 }
 body div{
-    height:590px;
+    height:100vh;
     display:flex;
     flex-direction: column;
-    justify-content: space-evenly;
+    justify-content: center;
     align-items: center;
 }
 #game_board{
