@@ -1,8 +1,23 @@
 #include <iostream>
 #include <Windows.h>
 #include <list>
-#include "Option.h"
 using namespace std;
+
+
+struct Option
+{
+	int mOrder;
+	int mCountWin;
+	int mCountLoss;
+	bool operator > (Option lCompare) {
+		return percentWin() > lCompare.percentWin();
+	}
+	double percentWin() {
+		if (mCountWin + mCountLoss == 0)
+			return 0;
+		return (double)mCountWin / (mCountWin + mCountLoss)*100;
+	}
+};
 
 const int scale = 3;
 void draw(char XandO[scale][scale]);
