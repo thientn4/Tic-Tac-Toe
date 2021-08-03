@@ -24,7 +24,7 @@ body div{
     border-color:white;
     border-width: 4px;
     background-color: white;
-    width:410px;
+    width:400px;
     border-radius:20px;
     height:60px;
     font-family: Arial, Helvetica, sans-serif;
@@ -47,8 +47,8 @@ body div{
     border-width: 4px;
     background-color:white;
     border-radius:20px;
-    width:120px;
-    height:120px;
+    width:110px;
+    height:110px;
     align-items: center;
 }
 .square.highlight{
@@ -83,7 +83,7 @@ body div{
     width:20px;
     border-radius: 10px;
     transform:rotate(45deg);
-    left:34px;
+    left:35px;
 }
 .cross div:nth-child(2){
     position:absolute;
@@ -92,7 +92,7 @@ body div{
     width:20px;
     border-radius: 10px;
     transform:rotate(-45deg);
-    left:34px;
+    left:35px;
 }
 .square.cross_active div:nth-child(2){
     display:flex;
